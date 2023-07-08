@@ -1,0 +1,52 @@
+---
+name: Deploy to EKS
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: <your_aws_region>
+      - name: Install AWS CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y awscli
+      - name: Install kubectl
+        run: >
+          sudo curl --silent --location -o /usr/local/bin/kubectl
+          https://amazon-eks.s3.us-west-2.amazonaws.com/1.20.4/2021-04-12/bin/linux/amd64/kubectl
+
+          sudo chmod +x /usr/local/bin/kubectl
+      - name: Configure kubectl
+        run: >
+          aws eks update-kubeconfig --name <your_eks_cluster_name> --region
+          <your_aws_region>
+      - name: Deploy microservices
+        run: |
+          kubectl apply -f altschool-finalproject/Monitoring Manifest/00-monitoring-ns.yaml
+          kubectl apply -f altschool-finalproject/Monitoring Manifest/01-prometheus-sa.yaml
+          kubectl apply -f altschool-finalproject/Monitoring Manifest/02-prometheus-cr.yaml
+          kubectl apply -f altschool-finalproject/Monitoring Manifest/03-prometheus-crb.yaml
+          kubectl apply -f altschool-finalproject/Monitoring Manifest/04-prometheus-configmap.yaml
+          kubectl apply -f altschool-finalproject/Monitoring Manifest/05-prometheus-alertrules.yaml
+          kubectl apply -f altschool-finalproject/Monitoring Manifest/06-prometheus-dep.yaml
+          kubectl apply -f altschool-finalproject/Monitoring Manifest/07-prometheus-svc.yaml
+          kubectl apply -f altschool-finalproject/Monitoring Manifest/08-prometheus-exporter-disk-usage-ds.yaml
+          kubectl apply -f altschool-finalproject/Monitoring Manifest/09-grafana-configmap.yaml
+          kubectl apply -f altschool-finalproject/Monitoring Manifest/10-grafana-dep.yaml
+          kubectl apply -f altschool-finalproject/Monitoring Manifest/11-grafana-svc.yaml
+          kubectl apply -f altschool-finalproject/Monitoring Manifest/12-grafana-import-dash-batch.yaml
+          kubectl apply -f altschool-finalproject/Monitoring Manifest/13-prometheus-node-exporter-sa.yaml
+          kubectl apply -f altschool-finalproject/Monitoring Manifest/14-prometheus-node-exporter-daemonset.yaml
+          kubectl apply -f altschool-finalproject/Monitoring Manifest/15-prometheus-node-exporter-svc.yaml
+          
+          # Add more kubectl apply commands for each microservice
